@@ -245,7 +245,7 @@ class WGAN(keras.Model):
 
 
 
-# Custom callback class to save images every 25 epochs 
+# Custom callback class to save images every 100 epochs 
 class Save_plot(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
