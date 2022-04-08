@@ -10,4 +10,6 @@ The other files involve the generation of synthetic ECGs using Bi-LSTM GANs (mor
 The WGAN-GP contains a number of additional features such as Minibatch Discrimination (to protect against mode collapse) and 
 a Frechet Inception Score (FID) critic to evaluate the quality of the synthesized data. 
 
+The INFOGAN is currently our best performing model. It contains an implementation of Infogan - https://arxiv.org/pdf/1606.03657.pdf but using WGAN-GP loss function and Bi-LSTM generator. 
+
 It should be noted that this repo is a work in progress and will be updated accordingly. 
