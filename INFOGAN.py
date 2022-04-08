@@ -22,9 +22,9 @@ from scipy.linalg import sqrtm
 
 '''
 Implementation of Infogan - https://arxiv.org/pdf/1606.03657.pdf but using WGAN-GP loss function 
-and 
-
+and Bi-LSTM generator. 
 '''
+
 # Setting Initial parameters
 batch_size = 50
 n_labels=6
