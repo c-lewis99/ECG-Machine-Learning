@@ -20,8 +20,11 @@ from numpy import iscomplexobj
 from numpy.random import random
 from scipy.linalg import sqrtm
 
+'''
+Implementation of Infogan - https://arxiv.org/pdf/1606.03657.pdf but using WGAN-GP loss function 
+and 
 
-
+'''
 # Setting Initial parameters
 batch_size = 50
 n_labels=6
@@ -35,10 +38,8 @@ Y_real=np.array(Y_real)
 Y_real=Y_real[:20000,1:]
 Y_unique=np.unique(Y_real, axis=0)
 
-'''
-X_real_all = np.loadtxt('X_10s_1000.csv')
-X_real = X_real_all.reshape(1000,1000,1)
-'''
+
+# Lets train using 20,000 samples
 X_real_all = np.loadtxt('X_10s_all.csv')
 X_real_all = X_real_all.reshape(int(X_real_all.shape[0]/1000),1000,12)
 X_real = X_real_all[:20000,:,0]
@@ -56,9 +57,11 @@ fake_beat_std=[]
 fake_bpm = pd.DataFrame(columns=['bpm', 'beat_std'])
 real_bpm = pd.DataFrame(columns=['bpm', 'beat_std'])
 
+# Importing pretrained critic to calculated FID score
 critic = keras.models.load_model("fid_critic.h5")
 fid_min=1000
 
+# Function to find the peaks of the ECGs
 def peakfinder(X):
     locations = []
     s=pd.Series(X)
@@ -79,6 +82,7 @@ def peakfinder(X):
     
     return locations[0]
 
+# Calculates BPM and stddev of intra-beat time
 def beat_metrics(X):
     peaks = peakfinder(X)
     diff = np.diff(peaks)
@@ -106,10 +110,6 @@ def calculate_fid(act1, act2):
 	# calculate score
 	fid = ssdiff + trace(sigma1 + sigma2 - 2.0 * covmean)
 	return fid
-
-# Basic Generator consisting of Convolutional Transpose layers
-# Input shape (noise+label) = (125,1)
-# Output shape = (1000, 1)
 
 
 # Borrowed from: https://github.com/forcecore/Keras-GAN-Animeface-Character/blob/master/discrimination.py
@@ -177,8 +177,8 @@ class MinibatchDiscrimination(Layer):
     
 
 
-# Basic Generator consisting of Convolutional Transpose layers
-# Input shape (noise+label) = (125,1)
+# Generator consisting of Convolutional Transpose layers
+# Input shape (noise+label+codes) = (125,1)
 # Output shape = (1000, 1)
 
    
@@ -202,7 +202,6 @@ def define_generator():
 
     x = layers.Convolution1D(filters=1, kernel_size=10, strides=1, padding='same', activation='sigmoid')(x)
 
-    
     generator = keras.Model(noise, x, name = 'Generator')
     return generator
 
@@ -445,7 +444,7 @@ class INFOGAN(keras.Model):
 
 
 
-# Custom callback class to save images every 25 epochs 
+# Custom callback class to save images every 10 epochs 
 class Save_plot(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
@@ -459,14 +458,13 @@ class Save_plot(keras.callbacks.Callback):
             
             
         # Here we choose a random real ECG, generate a synthetic one with the same
-        # label and plot them both as well as the AC-WGAN losses.
+        # label and plot them both as well as the INFOGAN losses.
         if epoch%10==0:
-
-
-            #FID
+		
             #FID
             epoch_list = np.linspace(0, epoch, int(epoch/10+1))
 
+            # Here we save the generator with the lowest FID score		
             fid_metrics = self.model.fid(100)
             if 100*fid_metrics[2]<fid_min:
                 fid_min = 100*fid_metrics[2]
@@ -487,7 +485,7 @@ class Save_plot(keras.callbacks.Callback):
                                                                                                                     real_bpm.mean(axis=0)[1], fake_bpm.mean(axis=0)[1]))
 
             
-            
+            #Plotting some real/fake ECGs
             images = X_real[:,:,0]
             random_no = np.random.randint(X_real.shape[0], size=2)
             plot_ex = images[random_no,:]
