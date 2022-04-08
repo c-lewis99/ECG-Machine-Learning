@@ -111,6 +111,9 @@ def calculate_fid(act1, act2):
 # Input shape (noise+label) = (125,1)
 # Output shape = (1000, 1)
 
+
+# Borrowed from: https://github.com/forcecore/Keras-GAN-Animeface-Character/blob/master/discrimination.py
+
 class MinibatchDiscrimination(Layer):
 
     def __init__(self, nb_kernels, kernel_dim, init='glorot_uniform', weights=None,
@@ -177,7 +180,6 @@ class MinibatchDiscrimination(Layer):
 # Basic Generator consisting of Convolutional Transpose layers
 # Input shape (noise+label) = (125,1)
 # Output shape = (1000, 1)
-
 
    
 def define_generator():
@@ -248,9 +250,9 @@ def define_discriminator():
 
 
 
-class WGAN(keras.Model):
+class INFOGAN(keras.Model):
     def __init__(self, discriminator, generator, latent_dim):
-        super(WGAN, self).__init__()
+        super(INFOGAN, self).__init__()
         self.discriminator = discriminator
         self.generator = generator
         
@@ -263,15 +265,13 @@ class WGAN(keras.Model):
         self.disc_loss_tracker_label = keras.metrics.Mean(name="discriminator_loss_label")
         self.info_loss_tracker = keras.metrics.Mean(name="information_loss")
 
-
-
     @property
     def metrics(self):
         return [self.gen_loss_tracker, self.disc_loss_tracker,self.disc_loss_tracker_real,self.disc_loss_tracker_fake,
                 self.disc_loss_tracker_gp,self.disc_loss_tracker_label, self.info_loss_tracker]
 
     def compile(self, d_optimizer, g_optimizer, d_loss_fn, g_loss_fn, info_loss_fn):
-        super(WGAN, self).compile(run_eagerly=True)
+        super(INFOGAN, self).compile(run_eagerly=True)
         self.d_optimizer = d_optimizer
         self.g_optimizer = g_optimizer
         self.d_loss_fn = d_loss_fn
@@ -329,7 +329,7 @@ class WGAN(keras.Model):
     def train_step(self, data):
         '''
         We override the models train step to implement a custom loss function.
-        The ACGAN is trained as follows:
+        The Infogan is trained as follows:
         1). A batch of real ECGs (images) and their labels are selected
         2). A random batch of labels are chosen, combined with noise and inputted
             into the generator to synthesize fake ECGs
@@ -546,16 +546,16 @@ def info_loss(c, q_c):
 
 
 # Instantiate the WGAN model.
-wgan = WGAN(
+igan = INFOGAN(
     discriminator=define_discriminator(),
     generator=define_generator(),
-    latent_dim=120,
+    latent_dim=1,
 )
 
 define_discriminator().summary()
 define_generator().summary()
 
-wgan.compile(
+igan.compile(
     d_optimizer=keras.optimizers.Adam(
     learning_rate=0.0005, beta_1=0.5, beta_2=0.9),
     
@@ -567,6 +567,6 @@ wgan.compile(
     info_loss_fn = info_loss)
 
     
-wgan.fit(dataset, epochs=1005, callbacks = [plotter])
+igan.fit(dataset, epochs=1005, callbacks = [plotter])
 
-wgan.generator.save('Saved Models/AC-WGAN/AC-WGAN3-Final.h5')
+igan.generator.save('Saved Models/INFOGAN/INFOGAN-Final.h5')
