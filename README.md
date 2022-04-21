@@ -10,6 +10,8 @@ The other files involve the generation of synthetic ECGs using Bi-LSTM GANs (mor
 The WGAN-GP contains a number of additional features such as Minibatch Discrimination (to protect against mode collapse) and 
 a Frechet Inception Score (FID) critic to evaluate the quality of the synthesized data. 
 
-The INFOGAN is currently our best performing model. It contains an implementation of Infogan - https://arxiv.org/pdf/1606.03657.pdf but using WGAN-GP loss function and Bi-LSTM generator. 
+The INFOGAN - It contains an implementation of Infogan - https://arxiv.org/pdf/1606.03657.pdf but using WGAN-GP loss function and Bi-LSTM generator. 
+
+CARDIGAN (pardon the pun!) is a  novel way of simultaneously generating new ECGs and training an auxillary classifier at the same time. It consists of three networks (generator/discriminator/classifier). Initially the classifier only learns from the real data; then, when the generator is consistently producing coonvincing samples, a label loss function for the fake data is activated, and the classifier begins to learn from these new samples.
 
 It should be noted that this repo is a work in progress and will be updated accordingly. 
